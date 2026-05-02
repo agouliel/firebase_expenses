@@ -87,13 +87,13 @@ function App() {
           </div>
 
           <div style={{ marginTop: '20px' }}>
-            <h3>Upcoming Events:</h3>
+            <h3>Expenses:</h3>
             {events.length > 0 ? (
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                {events.map((event, i) => (
-                  <li key={i} style={{ borderBottom: '1px solid #eee', padding: '10px 0' }}>
-                    <strong>{event.summary}</strong> <br />
-                    <small>{new Date(event.start.dateTime || event.start.date).toLocaleString()}</small>
+                {events.map((event) => (
+                  <li key={event.id}>
+                    <strong>€{event.amount}</strong> - {event.summary} 
+                    <span style={{color: 'blue'}}> #{event.hashtag}</span>
                   </li>
                 ))}
               </ul>

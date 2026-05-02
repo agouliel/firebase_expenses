@@ -129,7 +129,42 @@ app.get("/api/calendar", authenticate, async (req, res) => {
         q: '#',
         orderBy: 'startTime',
       });
-      res.json(response.data.items);
+
+      const events = response.data.items || [];
+
+      // Translate your Python logic to JavaScript
+      const filteredExpenses = events.reduce((acc, event) => {
+        const summary = event.summary || "";
+        const parts = summary.trim().split(/\s+/); // Split by any whitespace
+
+        if (parts.length >= 2) {
+          const firstWord = parts[0];
+          const lastWord = parts[parts.length - 1];
+
+          // Check if first word is numeric (handles 10 or 10.50)
+          const isNumeric = !isNaN(firstWord) && !isNaN(parseFloat(firstWord));
+          // Check if last word is a hashtag
+          const isHashtag = lastWord.startsWith('#');
+
+          if (isNumeric && isHashtag) {
+            acc.push({
+              id: event.id,
+              user: req.user.uid,
+              // Extract YYYY-MM-DD from dateTime or date (for all-day events)
+              date_start: (event.start.dateTime || event.start.date).substring(0, 10),
+              hashtag: lastWord.substring(1), // Remove the '#'
+              summary: parts.slice(1, -1).join(' '), // Everything between amount and hashtag
+              amount: parseFloat(firstWord),
+              url: event.htmlLink
+            });
+          }
+        }
+        return acc;
+      }, []);
+
+      //console.log(filteredExpenses);
+      res.json(filteredExpenses);
+
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
