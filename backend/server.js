@@ -117,12 +117,17 @@ app.get("/api/calendar", authenticate, async (req, res) => {
     // if a refresh_token is present in the credentials!
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
+    var date = new Date();
+
     try {
       const response = await calendar.events.list({
         calendarId: 'primary',
-        timeMin: new Date().toISOString(),
-        maxResults: 5,
+        timeMin: new Date(date.getFullYear(), date.getMonth(), 1).toISOString(),
+        timeMax: new Date(date.getFullYear(), date.getMonth()+1, 0).toISOString(),
+        maxResults: 2500,
         singleEvents: true,
+        q: '#',
+        orderBy: 'startTime',
       });
       res.json(response.data.items);
     } catch (error) {
