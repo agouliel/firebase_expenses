@@ -78,7 +78,6 @@ app.get("/api/data", authenticate, (req, res) => {
 });
 
 app.post("/api/save-calendar-token", authenticate, async (req, res) => {
-  //console.log("Incoming Body:", req.body);
   const { code } = req.body; // The Auth Code from the frontend
   const { uid } = req.user;
 
@@ -132,7 +131,7 @@ app.get("/api/calendar", authenticate, async (req, res) => {
 
       const events = response.data.items || [];
 
-      // Translate your Python logic to JavaScript
+      // Filter events to get only expenses
       const filteredExpenses = events.reduce((acc, event) => {
         const summary = event.summary || "";
         const parts = summary.trim().split(/\s+/); // Split by any whitespace
@@ -162,8 +161,60 @@ app.get("/api/calendar", authenticate, async (req, res) => {
         return acc;
       }, []);
 
-      //console.log(filteredExpenses);
-      res.json(filteredExpenses);
+      //res.json(filteredExpenses);
+
+      // Initialize Pivot and Maps
+      const pivot = {}; // { category: { month: total } }
+      const expense_map = {}; // { "category|month": [details] }
+      const totals_by_month = Array(12).fill(0).reduce((acc, _, i) => ({ ...acc, [i + 1]: 0 }), {});
+      const totals_by_category = {};
+      const years = new Set();
+
+      // Populate Pivot and Maps
+      filteredExpenses.forEach(exp => {
+        const month = parseInt(exp.date_start.substring(5, 7));
+        const year = exp.date_start.substring(0, 4);
+        const category = exp.hashtag || "Uncategorized";
+        years.add(year);
+
+        // Init category in pivot if new
+        if (!pivot[category]) {
+          pivot[category] = Array(12).fill(0).reduce((acc, _, i) => ({ ...acc, [i + 1]: 0 }), {});
+        }
+
+        // Add to Pivot
+        pivot[category][month] += exp.amount;
+
+        // Add to Expense Map (the detail drill-down)
+        const mapKey = `${category}|${month}`;
+        if (!expense_map[mapKey]) expense_map[mapKey] = [];
+        current_expense = {
+          id: exp.id,
+          summary: exp.summary,
+          amount: exp.amount,
+          url: exp.url,
+          date: exp.date_start
+        }
+        expense_map[mapKey].push(current_expense);
+
+        // Add to Totals
+        totals_by_month[month] += exp.amount;
+        totals_by_category[category] = (totals_by_category[category] || 0) + exp.amount;
+      });
+
+      // Return structured context
+      const context = {
+        pivot,
+        totals_by_month,
+        totals_by_category,
+        expense_map,
+        years: Array.from(years).sort(),
+        months: [
+          [1, "Jan"], [2, "Feb"], [3, "Mar"], [4, "Apr"],  [5, "May"], [6, "Jun"],
+          [7, "Jul"], [8, "Aug"], [9, "Sep"], [10, "Oct"], [11, "Nov"], [12, "Dec"]
+        ]
+      }
+      res.json(context);
 
     } catch (error) {
       res.status(500).json({ error: error.message });

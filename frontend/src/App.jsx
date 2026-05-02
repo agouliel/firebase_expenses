@@ -88,15 +88,29 @@ function App() {
 
           <div style={{ marginTop: '20px' }}>
             <h3>Expenses:</h3>
-            {events.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                {events.map((event) => (
-                  <li key={event.id}>
-                    <strong>€{event.amount}</strong> - {event.summary} 
-                    <span style={{color: 'blue'}}> #{event.hashtag}</span>
-                  </li>
-                ))}
-              </ul>
+            {events ? (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    {events.months.map(([num, name]) => <th key={num}>{name}</th>)}
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(events.pivot).map(cat => (
+                    <tr key={cat}>
+                      <td>#{cat}</td>
+                      {events.months.map(([m]) => (
+                        <td key={m}>
+                          {events.pivot[cat][m] > 0 ? `€${events.pivot[cat][m]}` : '-'}
+                        </td>
+                      ))}
+                      <td><strong>€{events.totals_by_category[cat]}</strong></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             ) : (
               <p>No events found or button not clicked yet.</p>
             )}
