@@ -99,7 +99,7 @@ app.get("/api/calendar", authenticate, async (req, res) => {
     try {
       const response = await calendar.events.list({
         calendarId: 'primary',
-        timeMin: new Date(date.getFullYear(), date.getMonth(), 1).toISOString(),
+        timeMin: new Date(date.getFullYear(), 0, 0).toISOString(),
         timeMax: new Date(date.getFullYear(), date.getMonth()+1, 0).toISOString(),
         maxResults: 2500,
         singleEvents: true,
