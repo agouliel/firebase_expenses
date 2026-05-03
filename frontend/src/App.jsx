@@ -80,7 +80,7 @@ function App() {
       ) : (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src={user.photoURL} width="40" style={{ borderRadius: '50%' }} />
+            <img src={user.photoURL} width="40" style={{ borderRadius: '50%' }} referrerPolicy="no-referrer" />
             <p>Welcome, {user.displayName}</p>
             <button onClick={fetchCalendar} disabled={loading}>
               {loading ? "Loading..." : "Show My Calendar"}
