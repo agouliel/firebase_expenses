@@ -6,6 +6,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [events, setEvents] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     // This listens for the user's login status automatically
@@ -54,11 +55,12 @@ function App() {
     }
   };
 
-  const fetchCalendar = async () => {
+  const fetchCalendar = async (yearOverride) => {
+    const year = yearOverride ?? selectedYear;
     setLoading(true);
     try {
       const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch("http://localhost:5001/api/calendar", {
+      const response = await fetch(`http://localhost:5001/api/calendar?year=${year}`, {
         headers: { 'Authorization': `Bearer ${idToken}` }
       });
       if (!response.ok) return;
@@ -71,6 +73,15 @@ function App() {
     }
   };
 
+  const handleYearChange = (e) => {
+    const year = parseInt(e.target.value);
+    setSelectedYear(year);
+    if (events) fetchCalendar(year);
+  };
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: currentYear - 2019 }, (_, i) => currentYear - i);
+
   return (
     <div style={{ padding: '40px', fontFamily: 'sans-serif' }}>
       <h1>Google Calendar Integration</h1>
@@ -82,7 +93,10 @@ function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src={user.photoURL} width="40" style={{ borderRadius: '50%' }} referrerPolicy="no-referrer" />
             <p>Welcome, {user.displayName}</p>
-            <button onClick={fetchCalendar} disabled={loading}>
+            <select value={selectedYear} onChange={handleYearChange} disabled={loading}>
+              {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <button onClick={() => fetchCalendar()} disabled={loading}>
               {loading ? "Loading..." : "Show My Calendar"}
             </button>
             <button onClick={() => signOut(auth)}>Sign out</button>

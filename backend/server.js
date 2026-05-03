@@ -94,13 +94,13 @@ app.get("/api/calendar", authenticate, async (req, res) => {
     // if a refresh_token is present in the credentials!
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    var date = new Date();
+    const year = parseInt(req.query.year) || new Date().getFullYear();
 
     try {
       const response = await calendar.events.list({
         calendarId: 'primary',
-        timeMin: new Date(date.getFullYear(), 0, 0).toISOString(),
-        timeMax: new Date(date.getFullYear(), date.getMonth()+1, 0).toISOString(),
+        timeMin: new Date(year, 0, 1).toISOString(),
+        timeMax: new Date(year + 1, 0, 1).toISOString(),
         maxResults: 2500,
         singleEvents: true,
         q: '#',
@@ -138,8 +138,6 @@ app.get("/api/calendar", authenticate, async (req, res) => {
         }
         return acc;
       }, []);
-
-      //res.json(filteredExpenses);
 
       // Initialize Pivot and Maps
       const pivot = {}; // { category: { month: total } }
