@@ -48,38 +48,27 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-app.get("/api/data", authenticate, (req, res) => {
-    const { uid, name, email, picture } = req.user;
-    const token = req.headers.authorization?.split(" ")[1];
-
-    // Save or Update user in SQLite
-    const query = `
-        INSERT INTO users (id, name, email, photo, token, last_login)
-        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(id) DO UPDATE SET
-        name = excluded.name,
-        photo = excluded.photo,
-        token = excluded.token,
-        last_login = CURRENT_TIMESTAMP
-    `;
-
-    db.run(query, [uid, name, email, picture, token], (err) => {
-        if (err) {
-            console.error("Database Save Error:", err);
-            return res.status(500).json({ error: "Failed to save user" });
-        }
-        
-        //res.json({ message: `Hello, ${req.user.name}! This data is protected.` });
-        res.json({ 
-            message: "User and Token saved to SQLite.",
-            user: req.user 
-        });
-    });
-});
-
 app.post("/api/save-calendar-token", authenticate, async (req, res) => {
-  const { code } = req.body; // The Auth Code from the frontend
-  const { uid } = req.user;
+  const { uid, name, email, picture } = req.user;
+  const token = req.headers.authorization?.split(" ")[1];
+
+  // Save or Update user in SQLite
+  const query = `
+      INSERT INTO users (id, name, email, photo, token, last_login)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+      name = excluded.name,
+      photo = excluded.photo,
+      token = excluded.token,
+      last_login = CURRENT_TIMESTAMP
+  `;
+
+  db.run(query, [uid, name, email, picture, token], (err) => {
+      if (err) {
+          console.error("Database Save Error:", err);
+          return res.status(500).json({ error: "Failed to save user" });
+      }
+  });
 
   try {
     // Exchange the code for tokens
@@ -107,7 +96,7 @@ app.post("/api/save-calendar-token", authenticate, async (req, res) => {
 
 app.get("/api/calendar", authenticate, async (req, res) => {
   db.get("SELECT token FROM users WHERE id = ?", [req.user.uid], async (err, row) => {
-    if (!row || !row.token) return res.status(404).send("No tokens found");
+    if (!row || !row.token) return res.status(404).send({"error":"No tokens found"});
 
     const tokens = JSON.parse(row.token);
     oauth2Client.setCredentials(tokens);

@@ -4,7 +4,7 @@ import { auth, provider } from "./firebaseConfig";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -61,6 +61,7 @@ function App() {
       const response = await fetch("http://localhost:5001/api/calendar", {
         headers: { 'Authorization': `Bearer ${idToken}` }
       });
+      if (!response.ok) return;
       const data = await response.json();
       setEvents(data);
     } catch (error) {

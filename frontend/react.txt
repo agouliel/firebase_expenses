@@ -1,0 +1,135 @@
+import React, { useEffect, useState } from "react";
+
+export default function Expenses() {
+  const [data, setData] = useState(null);
+  const [year, setYear] = useState("");
+  const [selectedExpenses, setSelectedExpenses] = useState([]);
+
+  useEffect(() => {
+    fetch(`/api/expenses?year=${year || ""}`)
+      .then(res => res.json())
+      .then(setData);
+  }, [year]);
+
+  const handleCellClick = (category, month) => {
+    const key = `${category}|${month}`;
+    setSelectedExpenses(data.expense_map[key] || []);
+  };
+
+  if (!data) return <div>Loading...</div>;
+
+  return (
+    <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
+      
+      {/* LEFT SIDEBAR */}
+      <div style={{ width: 200, background: "#f4f4f4", padding: 10 }}>
+        <h3>Years</h3>
+        <ul style={{ listStyle: "none", padding: 0 }}>
+          {data.years.map(y => (
+            <li key={y}>
+              <button
+                onClick={() => setYear(y)}
+                style={{ width: "100%", marginBottom: 5 }}
+              >
+                {y}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* MAIN TABLE */}
+      <div style={{ flex: 1, padding: 20, overflow: "auto" }}>
+        <h2>Expenses {year}</h2>
+
+        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+          <thead>
+            <tr style={{ background: "#eee" }}>
+              <th style={th}>Category</th>
+              {data.months.map(m => (
+                <th key={m.num} style={th}>{m.name}</th>
+              ))}
+              <th style={th}>Total</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {Object.entries(data.pivot).map(([category, months], idx) => {
+              const total = Object.values(months).reduce((a, b) => a + b, 0);
+
+              return (
+                <tr
+                  key={category}
+                  style={{
+                    background: idx % 2 === 0 ? "#f9f9f9" : "#fff"
+                  }}
+                >
+                  <td style={td}><strong>{category}</strong></td>
+
+                  {data.months.map(m => (
+                    <td
+                      key={m.num}
+                      style={{ ...td, cursor: "pointer" }}
+                      onClick={() => handleCellClick(category, m.num)}
+                    >
+                      {(months[m.num] || 0).toFixed(2)}
+                    </td>
+                  ))}
+
+                  <td style={td}><strong>{total.toFixed(2)}</strong></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* RIGHT SIDEBAR */}
+      <div style={{ width: 300, background: "#fafafa", padding: 10, borderLeft: "1px solid #ddd" }}>
+        <h3>Details</h3>
+
+        {selectedExpenses.length === 0 && (
+          <div>Click a cell</div>
+        )}
+
+        {selectedExpenses.map(exp => (
+          <div key={exp.id} style={{ marginBottom: 10 }}>
+            {exp.url ? (
+              <a href={exp.url} target="_blank" rel="noreferrer">
+                <strong>{exp.summary}</strong>
+              </a>
+            ) : (
+              <strong>{exp.summary}</strong>
+            )}
+
+            <div>{exp.amount}</div>
+            <hr />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const th = {
+  border: "1px solid #ccc",
+  padding: 6
+};
+
+const td = {
+  border: "1px solid #ccc",
+  padding: 6,
+  textAlign: "center"
+};
+
+--------------------------------------------------------------------
+
+const [selectedCell, setSelectedCell] = useState(null);
+
+--------------------------------------------------------------------
+
+const totalsByMonth = data.months.map(m =>
+  Object.values(data.pivot).reduce((sum, cat) => sum + (cat[m.num] || 0), 0)
+);
+
+--------------------------------------------------------------------
