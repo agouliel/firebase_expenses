@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
 import { auth, provider } from "./firebaseConfig";
 
 function App() {
@@ -85,6 +85,7 @@ function App() {
             <button onClick={fetchCalendar} disabled={loading}>
               {loading ? "Loading..." : "Show My Calendar"}
             </button>
+            <button onClick={() => signOut(auth)}>Sign out</button>
           </div>
 
           <div style={{ marginTop: '20px' }}>
