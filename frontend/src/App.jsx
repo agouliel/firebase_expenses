@@ -99,7 +99,7 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.keys(events.pivot).map(cat => (
+                  {Object.keys(events.pivot).sort((a, b) => a.localeCompare(b)).map(cat => (
                     <tr key={cat}>
                       <td>#{cat}</td>
                       {events.months.map(([m]) => (
@@ -110,6 +110,15 @@ function App() {
                       <td><strong>€{events.totals_by_category[cat]}</strong></td>
                     </tr>
                   ))}
+                  <tr>
+                    <td><strong>Total</strong></td>
+                    {events.months.map(([m]) => (
+                      <td key={m}>
+                        <strong>{events.totals_by_month[m] > 0 ? `€${events.totals_by_month[m]}` : '-'}</strong>
+                      </td>
+                    ))}
+                    <td><strong>€{Object.values(events.totals_by_category).reduce((s, v) => s + v, 0)}</strong></td>
+                  </tr>
                 </tbody>
               </table>
             ) : (
