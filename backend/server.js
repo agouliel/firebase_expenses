@@ -25,7 +25,8 @@ db.run(`
     name TEXT,
     email TEXT,
     photo TEXT,
-    token TEXT,
+    token_id TEXT,
+    tokens TEXT,
     last_login DATETIME
   )
 `);
@@ -54,51 +55,39 @@ app.post("/api/save-calendar-token", authenticate, async (req, res) => {
 
   // Save or Update user in SQLite
   const query = `
-      INSERT INTO users (id, name, email, photo, token, last_login)
+      INSERT INTO users (id, name, email, photo, token_id, last_login)
       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
-      name = excluded.name,
-      photo = excluded.photo,
-      token = excluded.token,
+      name = EXCLUDED.name,
+      photo = EXCLUDED.photo,
+      token_id = EXCLUDED.token_id,
       last_login = CURRENT_TIMESTAMP
   `;
 
   db.run(query, [uid, name, email, picture, token], (err) => {
-      if (err) {
-          console.error("Database Save Error:", err);
-          return res.status(500).json({ error: "Failed to save user" });
-      }
-  });
+    if (err) {
+      console.error("Database Save Error:", err);
+      return res.status(500).json({ error: "Failed to save user" });
+    }
 
-  try {
-    // Exchange the code for tokens
     const { tokens } = req.body;
-    
-    // tokens contains access_token and refresh_token
-    const query = `
-      UPDATE users 
-      SET token = ?, last_login = CURRENT_TIMESTAMP 
+    const updateQuery = `
+      UPDATE users
+      SET tokens = ?, last_login = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
-
-    // Store the full tokens object as a string
-    db.run(query, [JSON.stringify(tokens), uid], (err) => {
+    db.run(updateQuery, [JSON.stringify(tokens), uid], (err) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ message: "Refresh token saved successfully!" });
     });
-  } catch (error) {
-    //console.error("Token Exchange Error:", error.message);
-    //res.status(500).json({ error: "Failed to exchange code" });
-    console.error("Full Google Error:", error.response?.data || error.message);
-    res.status(500).json({ error: error.response?.data?.error_description || error.message });
-  }
+  });
 });
 
 app.get("/api/calendar", authenticate, async (req, res) => {
-  db.get("SELECT token FROM users WHERE id = ?", [req.user.uid], async (err, row) => {
-    if (!row || !row.token) return res.status(404).send({"error":"No tokens found"});
+  db.get("SELECT tokens FROM users WHERE id = ?", [req.user.uid], async (err, row) => {
+    if (!row || !row.tokens) return res.status(404).send({"error":"No tokens found"});
 
-    const tokens = JSON.parse(row.token);
+    const tokens = JSON.parse(row.tokens);
     oauth2Client.setCredentials(tokens);
 
     // Google library automatically handles refreshing the access_token 
