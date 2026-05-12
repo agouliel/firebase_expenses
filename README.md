@@ -1,28 +1,29 @@
+# Convert to Expo
+
 ## Package changes                                                               
 - Remove: react-dom, vite, all Vite plugins                                   
 - Add: expo, react-native, expo-router (if you want navigation later)         
-- Firebase auth: replace signInWithPopup with expo-auth-session + @react-native-google-signin/google-signin — this is the biggest friction point
+- Firebase auth: replace `signInWithPopup` with `expo-auth-session` + `@react-native-google-signin/google-signin`
 
 ## Code changes
 All JSX elements must be replaced:                                            
-- div/span → View/Text                                                        
-- img → Image                                                                 
-- button → Pressable or TouchableOpacity
-- select → Picker or a custom modal picker                                    
-- The expense table (table/tr/td) needs the most work — likely a FlatList or ScrollView with nested `View`s
+- div/span -> View/Text                                                        
+- img -> Image                                                                 
+- button -> Pressable or TouchableOpacity
+- select -> Picker or a custom modal picker                                    
+- Expense table (table/tr/td) -> likely a FlatList or ScrollView with nested `View`s
                                                                                 
-CSS goes away entirely — replace App.css / index.css with StyleSheet.create({}) objects inline.                                         
+CSS: replace `App.css` / `index.css` with `StyleSheet.create({})` objects inline.                                         
 
-`firebaseConfig.js` stays mostly the same; Firebase JS SDK works in Expo. But Google Sign-In popup doesn't work on native — you need expo-auth-session to
-handle the OAuth redirect flow.
+`firebaseConfig.js` stays mostly the same; Firebase JS SDK works in Expo. But Google Sign-In popup doesn't work on native - we need `expo-auth-session` to handle the OAuth redirect flow.
                   
 ## What's easy
-- All useState / useEffect logic carries over unchanged                       
+- All useState / useEffect logic carries over unchanged
 - fetch() calls to your backend work identically
-- The overall component structure is simple (one file), so there's not much to untangle                                                                     
+- The overall component structure is simple (one file)
 
 ## Bottom line
-The hardest part is Google OAuth — Expo's approach requires setting up OAuth redirect URIs in your Google Cloud Console and Firebase project, and testing it on a real device or simulator rather than a browser popup.
+Expo's approach requires setting up OAuth redirect URIs in your Google Cloud Console and Firebase project, and testing it on a real device or simulator rather than a browser popup.
 
 ---
 
@@ -31,7 +32,7 @@ Converting this to React Native (Expo) requires a shift from web-based logic (li
 ### Key Mobile Adjustments
 *   **Table Logic:** We use a horizontal `ScrollView` to handle the wide pivot table, as mobile screens are too narrow for 14 columns (Category + 12 Months + Total).
 *   **Picker:** We use `@react-native-picker/picker` (standard Expo practice).
-*   **Auth:** Kept the logic placeholders, but remember that on mobile, you typically use `signInWithIdToken` after getting a token from the Google app.
+*   **Auth:** Keep the logic placeholders, but remember that on mobile, you typically use `signInWithIdToken` after getting a token from the Google app.
 
 ```javascript
 import React, { useState, useEffect } from 'react';
@@ -304,8 +305,8 @@ const styles = StyleSheet.create({
 `npx create-expo-app@latest mobile --template blank`
 (create-expo-app@3.5.3)
 
-`cd mobile`
-`npx expo install firebase expo-auth-session expo-web-browser @react-native-async-storage/async-storage expo-crypto`
+`cd mobile`   
+`npx expo install firebase expo-auth-session expo-web-browser @react-native-async-storage/async-storage expo-crypto`   
 `npm install --save firebase`
 
 ## Two files changed for OAuth
@@ -313,7 +314,8 @@ const styles = StyleSheet.create({
 This is required because React Native has no browser localStorage.                             
                                                                               
 `App.js` - replaces `signInWithPopup` with `expo-auth-session`'s `Google.useAuthRequest` + `signInWithCredential`.
-The flow:                       
+
+The flow:
 1. promptAsync() opens a browser tab for Google sign-in                       
 2. On success, response.authentication contains idToken + accessToken         
 3. Those are passed to GoogleAuthProvider.credential() -> signInWithCredential()                                                        
@@ -326,11 +328,11 @@ The calendar token save is stubbed out in a comment.
 Before runnning it, one required setup step:
 
 Get the Web Client ID:
-1. Go to https://console.firebase.google.com > agouliel-sign-in project       
-2. Authentication > Sign-in method > Google > expand "Web SDK configuration"  
+1. Go to https://console.firebase.google.com > `agouliel-sign-in` project
+2. Authentication > Sign-in method > Google > expand "Web SDK configuration"
 3. Copy the Web client ID
-4. Paste it into `mobile/App.js` replacing YOUR_WEB_CLIENT_ID.apps.googleusercontent.com                                 
-                                                                                
+4. Paste it into `mobile/App.js` replacing WEB_CLIENT_ID.apps.googleusercontent.com
+
 Then add the Expo redirect URI to Google Cloud Console:
 - Go to Google Cloud Console > APIs & Services > Credentials > the OAuth 2.0 client
 - Under "Authorized redirect URIs", add: https://auth.expo.io/@agouliel/mobile
