@@ -7,9 +7,10 @@ import { auth } from './firebaseConfig';
 
 WebBrowser.maybeCompleteAuthSession();
 
-// Get this from: Firebase Console > Authentication > Sign-in method > Google >
-// "Web SDK configuration" section > Web client ID
-const WEB_CLIENT_ID = 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
+const WEB_CLIENT_ID = '1039882731179-e7jkvo3ouenrchf9sa3kkmo2ocplcnj3.apps.googleusercontent.com';
+// Google Cloud Console > APIs & Services > Credentials > Create OAuth client > iOS
+// Bundle ID: com.agouliel.expenses
+const IOS_CLIENT_ID = 'IOS_CLIENT_ID.apps.googleusercontent.com';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -17,6 +18,7 @@ export default function App() {
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: WEB_CLIENT_ID,
+    iosClientId: IOS_CLIENT_ID,
     scopes: [
       'openid',
       'profile',

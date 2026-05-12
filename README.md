@@ -330,7 +330,7 @@ Before runnning it, one required setup step:
 Get the Web Client ID:
 1. Go to https://console.firebase.google.com > `agouliel-sign-in` project
 2. Authentication > Sign-in method > Google > expand "Web SDK configuration"
-3. Copy the Web client ID
+3. Copy the Web client ID (it already exists in `backend/server.js`)
 4. Paste it into `mobile/App.js` replacing WEB_CLIENT_ID.apps.googleusercontent.com
 
 Then add the Expo redirect URI to Google Cloud Console:
@@ -338,3 +338,16 @@ Then add the Expo redirect URI to Google Cloud Console:
 - Under "Authorized redirect URIs", add: https://auth.expo.io/@agouliel/mobile
 
 Then run it with `! cd mobile && npx expo start`.
+
+## iOS OAuth client ID
+Running on iOS, `expo-auth-session` requires a separate iOS OAuth client ID - it can't reuse the web one natively. We need to create one in Google Cloud Console.
+1. Add a bundle ID to `app.json`
+2. Add `iosClientId` placeholder to `App.js`
+3. Create the iOS OAuth client in Google Cloud Console:
+  - https://console.cloud.google.com -> `agouliel-sign-in` project
+  - APIs & Services → Credentials -> Create Credentials -> OAuth client ID
+  - Application type: iOS
+  - Bundle ID: `com.agouliel.expenses`
+  - Copy the generated client ID and replace `IOS_CLIENT_ID` in `App.js`
+
+Unlike the web client, the iOS client ID doesn't need a redirect URI configured — Google verifies it via the bundle ID instead.
